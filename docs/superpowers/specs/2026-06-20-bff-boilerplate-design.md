@@ -52,10 +52,20 @@ src/routes/
 ```
 
 **Key decisions:**
-- `authentication/[slug]` dynamic route is kept as-is; only `sign-in.svelte` gets its `onSubmit` wired to POST `/api/auth/login`
+- `authentication/[slug]` dynamic route is kept as-is; only `sign-in.svelte` and `sign-up.svelte` get their `onSubmit` wired
 - `hooks.server.ts` redirects unauthenticated users to `/authentication/sign-in`
-- `errors/[code]` and `sitemap.xml` routes stay untouched
+- `errors/[code]`, `sitemap.xml`, and `+error.svelte` stay untouched
+- `(public)/pages/404.svelte` and `(public)/pages/500.svelte` stay untouched
 - No per-page auth checks — centralized entirely in `hooks.server.ts`
+
+**File treatment:**
+
+| Treatment | Files |
+|-----------|-------|
+| Folder rename only | `(sidebar)` → `(protected)`, `(no-sidebar)` → `(public)` |
+| Edited | `sign-in.svelte`, `sign-up.svelte`, `crud/users/+page.svelte`, `app.d.ts` |
+| New | `hooks.server.ts`, `api/auth/login/+server.ts`, `api/auth/register/+server.ts`, `api/auth/logout/+server.ts`, `api/users/+server.ts`, `api/users/[id]/+server.ts`, `(protected)/+layout.server.ts`, `mock/db.json` |
+| Untouched | Everything else — dashboard, settings, 404, 500, error pages, sitemap, all other pages |
 
 ---
 
