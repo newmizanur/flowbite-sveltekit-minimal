@@ -16,7 +16,7 @@
   let createAccount = true;
   let lostPasswordLink = 'forgot-password';
   let loginTitle = 'Login to your account';
-  let registerLink = '/';
+  let registerLink = '/authentication/sign-up';
   let createAccountTitle = 'Create account';
 
   let error = $state('');

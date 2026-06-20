@@ -15,7 +15,7 @@
   const haveAccount = true;
   const btnTitle = 'Create account';
   const termsLink = '/';
-  const loginLink = 'sign-in';
+  const loginLink = '/authentication/sign-in';
   const labelClass = 'space-y-2 dark:text-white';
 
   let error = $state('');
