@@ -2,6 +2,8 @@
   import { Label, Input } from 'flowbite-svelte';
   import { SignIn } from '$lib';
   import MetaTag from '../utils/MetaTag.svelte';
+  import { goto } from '$app/navigation';
+
   let title = 'Sign in to platform';
   let site = {
     name: 'Flowbite',
@@ -17,15 +19,29 @@
   let registerLink = '/';
   let createAccountTitle = 'Create account';
 
-  const onSubmit = (e: Event) => {
-    const formData = new FormData(e.target as HTMLFormElement);
+  let error = $state('');
 
-    const data: Record<string, string | File> = {};
-    for (const field of formData.entries()) {
-      const [key, value] = field;
-      data[key] = value;
+  const onSubmit = async (e: Event) => {
+    e.preventDefault();
+    error = '';
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data: Record<string, string> = {};
+    for (const [key, value] of formData.entries()) {
+      data[key] = value as string;
     }
-    console.log(data);
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: data.email, password: data.password })
+    });
+
+    if (res.ok) {
+      goto('/dashboard');
+    } else {
+      const json = await res.json();
+      error = json.error ?? 'Login failed';
+    }
   };
 
   const path: string = '/authentication/sign-in';
@@ -44,5 +60,8 @@
   <div>
     <Label for="password" class="mb-2 dark:text-white">Your password</Label>
     <Input type="password" name="password" id="password" placeholder="••••••••" required class="border outline-none dark:border-gray-600 dark:bg-gray-700" />
+    {#if error}
+      <p class="text-red-500 text-sm mt-1">{error}</p>
+    {/if}
   </div>
 </SignIn>

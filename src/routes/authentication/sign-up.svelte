@@ -2,6 +2,7 @@
   import { Label, Input } from 'flowbite-svelte';
   import { SignUp } from '$lib';
   import MetaTag from '../utils/MetaTag.svelte';
+  import { goto } from '$app/navigation';
 
   const title = 'Create a Free Account';
   const site = {
@@ -16,15 +17,35 @@
   const termsLink = '/';
   const loginLink = 'sign-in';
   const labelClass = 'space-y-2 dark:text-white';
-  const onSubmit = (e: Event) => {
-    const formData = new FormData(e.target as HTMLFormElement);
 
-    const data: Record<string, string | File> = {};
-    for (const field of formData.entries()) {
-      const [key, value] = field;
-      data[key] = value;
+  let error = $state('');
+
+  const onSubmit = async (e: Event) => {
+    e.preventDefault();
+    error = '';
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data: Record<string, string> = {};
+    for (const [key, value] of formData.entries()) {
+      data[key] = value as string;
     }
-    console.log(data);
+
+    if (data.password !== data['confirm-password']) {
+      error = 'Passwords do not match';
+      return;
+    }
+
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: data.name, email: data.email, password: data.password })
+    });
+
+    if (res.ok) {
+      goto('/dashboard');
+    } else {
+      const json = await res.json();
+      error = json.error ?? 'Registration failed';
+    }
   };
 
   const path: string = '/authentication/sign-up';
@@ -36,6 +57,12 @@
 <MetaTag {path} {description} title={metaTitle} {subtitle} />
 
 <SignUp {title} {site} {acceptTerms} {haveAccount} {btnTitle} {termsLink} {loginLink} onsubmit={onSubmit}>
+  <div>
+    <Label class={labelClass}>
+      <span>Your name</span>
+      <Input type="text" name="name" placeholder="John Doe" required class="border outline-none dark:border-gray-600 dark:bg-gray-700" />
+    </Label>
+  </div>
   <div>
     <Label class={labelClass}>
       <span>Your email</span>
@@ -53,5 +80,8 @@
       <span>Confirm password</span>
       <Input type="password" name="confirm-password" placeholder="••••••••" required class="border outline-none dark:border-gray-600 dark:bg-gray-700" />
     </Label>
+    {#if error}
+      <p class="text-red-500 text-sm mt-1">{error}</p>
+    {/if}
   </div>
 </SignUp>
