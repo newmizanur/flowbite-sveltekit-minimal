@@ -199,11 +199,6 @@
     URL.revokeObjectURL(a.href);
   }
 
-  async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    goto('/authentication/sign-in');
-  }
-
   const path = '/crud/users';
   const description = 'CRUD users — Flowbite Svelte Admin Dashboard';
   const title = 'Flowbite Svelte Admin Dashboard - CRUD Users';
@@ -221,7 +216,6 @@
     </Breadcrumb>
     <div class="flex items-center justify-between">
       <Heading tag="h1" class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">All users</Heading>
-      <Button size="xs" color="alternative" onclick={handleLogout}>Sign out</Button>
     </div>
 
     <Toolbar embedded class="w-full py-4 text-gray-500 dark:text-gray-300">

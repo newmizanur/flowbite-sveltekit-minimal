@@ -121,7 +121,7 @@
     <DarkMode />
     <UserMenu {...users[4]} {menuItems}>
       <DropdownDivider />
-      <DropdownItem>Sign out</DropdownItem>
+      <DropdownItem onclick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/authentication/sign-in'; }}>Sign out</DropdownItem>
     </UserMenu>
   </div>
 </Navbar>
