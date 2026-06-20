@@ -70,3 +70,13 @@ export function verifySession(token: string, secret: string): SessionPayload | n
     return null;
   }
 }
+
+export function requireAuth(cookies: Cookies, secret: string): SessionPayload | null {
+  const token = cookies.get('session');
+  if (!token) return null;
+  try {
+    return verifySession(token, secret);
+  } catch {
+    return null;
+  }
+}

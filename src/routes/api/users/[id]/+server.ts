@@ -1,19 +1,20 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { JSON_SERVER_URL, SESSION_SECRET } from '$env/static/private';
-import { verifySession } from '$lib/server/session';
-
-function requireAuth(cookies: import('@sveltejs/kit').Cookies) {
-  const token = cookies.get('session');
-  return token ? verifySession(token, SESSION_SECRET) : null;
-}
+import { requireAuth } from '$lib/server/session';
 
 export const PATCH: RequestHandler = async ({ params, request, cookies }) => {
-  if (!requireAuth(cookies)) {
+  if (!requireAuth(cookies, SESSION_SECRET)) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Invalid request body.' }, { status: 400 });
+  }
+
   const now = new Date().toISOString();
 
   const res = await fetch(`${JSON_SERVER_URL}/users/${params.id}`, {
@@ -31,7 +32,7 @@ export const PATCH: RequestHandler = async ({ params, request, cookies }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
-  if (!requireAuth(cookies)) {
+  if (!requireAuth(cookies, SESSION_SECRET)) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
