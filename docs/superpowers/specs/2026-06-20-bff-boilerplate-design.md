@@ -32,8 +32,14 @@ src/routes/
 │
 ├── (public)/                          ← renamed from (no-sidebar)
 │   ├── +layout.svelte                 ← unchanged
-│   ├── login/+page.svelte             ← NEW (replaces authentication/[slug])
 │   └── ...other existing public pages
+│
+├── authentication/                    ← unchanged (outside route groups)
+│   ├── [slug]/+page.svelte            ← unchanged dynamic loader
+│   ├── sign-in.svelte                 ← WIRED: form POSTs to /api/auth/login
+│   ├── sign-up.svelte                 ← unchanged (no auth wiring needed)
+│   ├── forgot-password.svelte         ← unchanged
+│   └── ...other auth pages
 │
 └── api/
     ├── posts/+server.ts               ← unchanged
@@ -46,7 +52,8 @@ src/routes/
 ```
 
 **Key decisions:**
-- `authentication/[slug]` dynamic route replaced by explicit `/login` — no slug magic for a boilerplate
+- `authentication/[slug]` dynamic route is kept as-is; only `sign-in.svelte` gets its `onSubmit` wired to POST `/api/auth/login`
+- `hooks.server.ts` redirects unauthenticated users to `/authentication/sign-in`
 - `errors/[code]` and `sitemap.xml` routes stay untouched
 - No per-page auth checks — centralized entirely in `hooks.server.ts`
 
@@ -67,8 +74,8 @@ hooks.server.ts  (runs on every request)
               → Reads session cookie
               → Verifies HMAC signature
               → Populates event.locals.user = { id, name, email, role }
-              → (protected) route + no valid session → redirect('/login')
-              → /login route + already authed → redirect('/dashboard')
+              → (protected) route + no valid session → redirect('/authentication/sign-in')
+              → /authentication/sign-in + already authed → redirect('/dashboard')
 
 (protected)/+layout.server.ts
               → return { user: locals.user }
