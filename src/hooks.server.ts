@@ -19,7 +19,7 @@ function isProtected(pathname: string): boolean {
 }
 
 function isAuthPage(pathname: string): boolean {
-  return AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(p));
+  return AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
