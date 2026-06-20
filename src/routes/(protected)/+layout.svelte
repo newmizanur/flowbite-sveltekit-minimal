@@ -4,14 +4,7 @@
   import Sidebar from './Sidebar.svelte';
   import type { LayoutProps } from './$types';
 
-  interface Route {
-    path: string;
-  }
-
-  let { children, data }: LayoutProps = $props();
-  const routes: Route[] = data.posts.adminDashboard;
-  const docsRoute = routes.filter((route) => route.path !== '').map((route) => route.path);
-
+  let { children }: LayoutProps = $props();
   let drawerHidden = $state(false);
 </script>
 
@@ -19,7 +12,7 @@
   <Navbar bind:drawerHidden />
 </header>
 <div class="overflow-hidden lg:flex">
-  <Sidebar bind:drawerHidden {docsRoute} />
+  <Sidebar bind:drawerHidden />
   <div class="relative h-full w-full overflow-y-auto pt-[70px] lg:ml-64">
     {@render children()}
   </div>
