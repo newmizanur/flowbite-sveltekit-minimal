@@ -1,30 +1,10 @@
 <script lang="ts">
   import '../app.css';
   import { page } from '$app/state';
-  import { NotFound, Maintenance, ServerError } from '$lib';
-
-  const pages = {
-    400: Maintenance,
-    404: NotFound,
-    500: ServerError
-  } as const;
-
-  type ErrorCode = keyof typeof pages;
-
-  const status = +page.status;
-  const index = Object.keys(pages)
-    .map((x) => +x)
-    .reduce((p, c) => (p < status ? c : p)) as ErrorCode;
-  const component = pages[index];
-
-  import MetaTag from './utils/MetaTag.svelte';
-
-  const path: string = `/errors/${index}`;
-  const description: string = `${index} - Flowbite Svelte Admin Dashboard`;
-  const title: string = `Flowbite Svelte Admin Dashboard - ${index} page`;
-  const subtitle: string = `${index} page`;
 </script>
 
-<MetaTag {path} {description} {title} {subtitle} />
-
-<svelte:component this={component} />
+<div class="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-gray-900">
+  <h1 class="text-7xl font-bold text-gray-900 dark:text-white">{page.status}</h1>
+  <p class="mt-4 text-xl text-gray-600 dark:text-gray-400">{page.error?.message ?? 'Something went wrong'}</p>
+  <a href="/crud/users" class="mt-8 text-blue-600 hover:underline dark:text-blue-400">Go back home</a>
+</div>

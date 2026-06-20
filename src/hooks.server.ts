@@ -2,15 +2,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { verifySession } from '$lib/server/session';
 import { SESSION_SECRET } from '$env/static/private';
 
-const PROTECTED_PATHS = [
-  '/dashboard',
-  '/crud',
-  '/settings',
-  '/about',
-  '/layouts',
-  '/components',
-  '/playground'
-];
+const PROTECTED_PATHS = ['/crud'];
 
 const AUTH_PAGES = ['/authentication/sign-in', '/authentication/sign-up'];
 
@@ -35,7 +27,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   if (isAuthPage(pathname) && payload) {
-    throw redirect(303, '/dashboard');
+    throw redirect(303, '/crud/users');
   }
 
   return resolve(event);

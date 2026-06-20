@@ -4,7 +4,6 @@
   import {
     AngleDownOutline,
     AngleUpOutline,
-    ChartPieOutline,
     LockSolid,
     RectangleListSolid
   } from 'flowbite-svelte-icons';
@@ -29,8 +28,8 @@
     closeDrawer();
   });
 
-  const nav = [
-    { name: 'Dashboard', Icon: ChartPieOutline, href: '/dashboard' },
+  type NavItem = { name: string; Icon: typeof RectangleListSolid; href?: string; children?: Record<string, string> };
+  const nav: NavItem[] = [
     {
       name: 'CRUD',
       Icon: RectangleListSolid,

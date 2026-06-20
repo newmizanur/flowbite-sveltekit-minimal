@@ -41,7 +41,7 @@
     });
 
     if (res.ok) {
-      goto('/dashboard');
+      goto('/crud/users');
     } else {
       const json = await res.json();
       error = json.error ?? 'Registration failed';
