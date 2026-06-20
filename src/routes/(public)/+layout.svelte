@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Footer from '../(public)/Footer.svelte';
+  import Footer from './Footer.svelte';
   import Navbar from '../(protected)/Navbar.svelte';
   import type { Snippet } from 'svelte';
   import '../../app.css';
