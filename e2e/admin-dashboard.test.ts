@@ -1,96 +1,73 @@
 import { expect, test } from '@playwright/test';
 
-test('home page has expected h1', async ({ page }) => {
+test('unauthenticated / redirects to sign-in', async ({ page }) => {
   await page.goto('/');
-  expect(await page.textContent('h1')).toBe('Dashboard');
+  await expect(page).toHaveURL(/\/authentication\/sign-in/);
 });
 
-test('dashboard page has expected h1', async ({ page }) => {
-  await page.goto('/dashboard');
-  expect(await page.textContent('h1')).toBe('Dashboard');
-});
-
-test('Pricing page has expected h1', async ({ page }) => {
-  await page.goto('/pages/pricing');
-  expect(await page.textContent('h1')).toBe('Our pricing plan made simple');
-});
-
-test('Layouts: Stacked page has expected h1', async ({ page }) => {
-  await page.goto('/layouts/stacked');
-  expect(await page.textContent('h1')).toBe('Layouts: Stacked');
-});
-
-test('Layouts: Sidebar page has expected h1', async ({ page }) => {
-  await page.goto('/layouts/sidebar');
-  expect(await page.textContent('h1')).toBe('Layouts: Sidebar');
-});
-
-test('Crud: Products page has expected h1', async ({ page }) => {
-  await page.goto('/crud/products');
-  expect(await page.textContent('h1')).toBe('CRUD: Products');
-});
-
-test('Crud: Users page has expected h1', async ({ page }) => {
+test('unauthenticated /crud/users redirects to sign-in', async ({ page }) => {
   await page.goto('/crud/users');
-  expect(await page.textContent('h1')).toBe('CRUD: Users');
+  await expect(page).toHaveURL(/\/authentication\/sign-in/);
 });
 
-test('Settings page has expected h1', async ({ page }) => {
-  await page.goto('/settings');
-  expect(await page.textContent('h1')).toBe('User settings');
-});
-
-test('Error 400, Maintenance page has expected h1', async ({ page }) => {
-  await page.goto('/errors/400');
-  expect(await page.textContent('h1')).toBe('Under Maintenance');
-});
-
-test('Error 404, Page not found page has expected h1', async ({ page }) => {
-  await page.goto('/errors/404');
-  expect(await page.textContent('h1')).toBe('Page not found');
-});
-
-test('Error 500 page has expected h1', async ({ page }) => {
-  await page.goto('/errors/500');
-  expect(await page.textContent('h1')).toBe('Something has gone seriously wrong');
-});
-
-test('Sign-in page has expected h1', async ({ page }) => {
+test('sign-in page renders', async ({ page }) => {
   await page.goto('/authentication/sign-in');
-  expect(await page.textContent('h1')).toBe('Sign in to platform');
+  await expect(page.locator('h1')).toHaveText('Sign in to platform');
 });
 
-test('Sign-up page has expected h1', async ({ page }) => {
+test('sign-up page renders', async ({ page }) => {
   await page.goto('/authentication/sign-up');
-  expect(await page.textContent('h1')).toBe('Create a Free Account');
+  await expect(page.locator('h1')).toHaveText('Create a Free Account');
 });
 
-test('forgot-password page has expected h1', async ({ page }) => {
-  await page.goto('/authentication/forgot-password');
-  expect(await page.textContent('h1')).toBe('Forgot your password?');
+test('sign-in with wrong credentials shows error', async ({ page }) => {
+  await page.goto('/authentication/sign-in');
+  await page.fill('input[name="email"]', 'wrong@example.com');
+  await page.fill('input[name="password"]', 'wrongpassword');
+  await page.click('button[type="submit"]');
+  await expect(page.locator('p.text-red-500')).toBeVisible();
 });
 
-test('reset-password page has expected h1', async ({ page }) => {
-  await page.goto('/authentication/reset-password');
-  expect(await page.textContent('h1')).toBe('Reset your password');
+test('sign-in with valid credentials redirects to /crud/users', async ({ page }) => {
+  await page.goto('/authentication/sign-in');
+  await page.fill('input[name="email"]', 'admin@demo.com');
+  await page.fill('input[name="password"]', 'password');
+  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/crud\/users/);
 });
 
-test('profile-lock page has expected h1', async ({ page }) => {
-  await page.goto('/authentication/profile-lock');
-  expect(await page.textContent('h1')).toBe('Neil Sims');
+test('authenticated user on sign-in redirects to /crud/users', async ({ page }) => {
+  // Log in first
+  await page.goto('/authentication/sign-in');
+  await page.fill('input[name="email"]', 'admin@demo.com');
+  await page.fill('input[name="password"]', 'password');
+  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/crud\/users/);
+
+  // Revisiting sign-in should redirect back
+  await page.goto('/authentication/sign-in');
+  await expect(page).toHaveURL(/\/crud\/users/);
 });
 
-test('playground/stacked page has expected h1', async ({ page }) => {
-  await page.goto('/playground/stacked');
-  expect(await page.textContent('h1')).toBe('Create something awesome here');
+test('crud/users page shows users table', async ({ page }) => {
+  await page.goto('/authentication/sign-in');
+  await page.fill('input[name="email"]', 'admin@demo.com');
+  await page.fill('input[name="password"]', 'password');
+  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/crud\/users/);
+  await expect(page.locator('h1')).toHaveText('CRUD: Users');
+  await expect(page.locator('table')).toBeVisible();
 });
 
-test('playground/sidebar page has expected h1', async ({ page }) => {
-  await page.goto('/playground/sidebar');
-  expect(await page.textContent('h1')).toBe('Create something awesome here');
-});
+test('sign-out returns to sign-in', async ({ page }) => {
+  await page.goto('/authentication/sign-in');
+  await page.fill('input[name="email"]', 'admin@demo.com');
+  await page.fill('input[name="password"]', 'password');
+  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/crud\/users/);
 
-test('About page has expected h1', async ({ page }) => {
-  await page.goto('/about');
-  expect(await page.textContent('h1')).toBe('Flowbite Svelte Admin Dashboard');
+  // Click the avatar to open dropdown, then sign out
+  await page.locator('img[alt*="avatar"], button:has(img)').first().click();
+  await page.getByText('Sign out').click();
+  await expect(page).toHaveURL(/\/authentication\/sign-in/);
 });
