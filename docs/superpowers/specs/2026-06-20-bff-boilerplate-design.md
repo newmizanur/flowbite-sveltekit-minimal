@@ -37,7 +37,7 @@ src/routes/
 ├── authentication/                    ← unchanged (outside route groups)
 │   ├── [slug]/+page.svelte            ← unchanged dynamic loader
 │   ├── sign-in.svelte                 ← WIRED: form POSTs to /api/auth/login
-│   ├── sign-up.svelte                 ← unchanged (no auth wiring needed)
+│   ├── sign-up.svelte                 ← WIRED: form POSTs to /api/auth/register
 │   ├── forgot-password.svelte         ← unchanged
 │   └── ...other auth pages
 │
@@ -76,6 +76,7 @@ hooks.server.ts  (runs on every request)
               → Populates event.locals.user = { id, name, email, role }
               → (protected) route + no valid session → redirect('/authentication/sign-in')
               → /authentication/sign-in + already authed → redirect('/dashboard')
+              → /authentication/sign-up + already authed → redirect('/dashboard')
 
 (protected)/+layout.server.ts
               → return { user: locals.user }
@@ -117,8 +118,9 @@ Browser  →  SvelteKit API route  →  json-server (localhost:3001)
 
 | Method | Route | Action |
 |--------|-------|--------|
-| POST | `/api/auth/login` | Match credentials, set session cookie |
-| POST | `/api/auth/logout` | Clear session cookie, redirect |
+| POST | `/api/auth/login` | Match credentials, set session cookie, redirect to /dashboard |
+| POST | `/api/auth/register` | Create credentials + user in json-server, set session cookie, redirect to /dashboard |
+| POST | `/api/auth/logout` | Clear session cookie, redirect to /authentication/sign-in |
 
 **Users endpoints (all require valid session):**
 
