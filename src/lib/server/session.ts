@@ -1,4 +1,17 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+import type { Cookies } from '@sveltejs/kit';
+
+export const SESSION_COOKIE_OPTIONS = {
+  path: '/',
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: 60 * 60 * 24 * 7
+};
+
+export function setSessionCookie(cookies: Cookies, token: string): void {
+  cookies.set('session', token, SESSION_COOKIE_OPTIONS);
+}
 
 export type SessionPayload = {
   id: string;
