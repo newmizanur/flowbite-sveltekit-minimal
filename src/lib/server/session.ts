@@ -16,12 +16,14 @@ function fromBase64Url(b64url: string): string {
 }
 
 export function signSession(payload: SessionPayload, secret: string): string {
+  if (!secret) throw new Error('Session secret must not be empty');
   const data = toBase64Url(Buffer.from(JSON.stringify(payload)).toString('base64'));
   const mac = toBase64Url(createHmac('sha256', secret).update(data).digest('base64'));
   return `${data}.${mac}`;
 }
 
 export function verifySession(token: string, secret: string): SessionPayload | null {
+  if (!secret) throw new Error('Session secret must not be empty');
   const dotIndex = token.lastIndexOf('.');
   if (dotIndex === -1) return null;
 
@@ -42,7 +44,15 @@ export function verifySession(token: string, secret: string): SessionPayload | n
   }
 
   try {
-    return JSON.parse(Buffer.from(fromBase64Url(data), 'base64').toString()) as SessionPayload;
+    const p = JSON.parse(Buffer.from(fromBase64Url(data), 'base64').toString());
+    if (
+      !p ||
+      typeof p.id !== 'string' ||
+      typeof p.name !== 'string' ||
+      typeof p.email !== 'string' ||
+      typeof p.role !== 'string'
+    ) return null;
+    return p as SessionPayload;
   } catch {
     return null;
   }
