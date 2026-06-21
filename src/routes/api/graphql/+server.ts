@@ -55,5 +55,10 @@ const yoga = createYoga({
   landingPage: false
 });
 
-export const GET: RequestHandler = ({ request }) => yoga.fetch(request);
-export const POST: RequestHandler = ({ request }) => yoga.fetch(request);
+async function handle(request: Request): Promise<Response> {
+  const res = await yoga.fetch(request);
+  return new Response(res.body, { status: res.status, headers: res.headers });
+}
+
+export const GET: RequestHandler = ({ request }) => handle(request);
+export const POST: RequestHandler = ({ request }) => handle(request);
