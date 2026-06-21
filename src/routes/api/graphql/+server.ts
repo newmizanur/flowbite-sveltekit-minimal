@@ -1,4 +1,5 @@
 import { createYoga, createSchema } from 'graphql-yoga';
+import type { RequestHandler } from './$types';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -12,10 +13,17 @@ type DbUser = {
   updated_at: string;
 };
 
-function getUsers(): DbUser[] {
-  const db = JSON.parse(readFileSync(join(process.cwd(), 'mock/db.json'), 'utf-8'));
-  return db.users as DbUser[];
+function loadUsers(): DbUser[] {
+  try {
+    const db = JSON.parse(readFileSync(join(process.cwd(), 'mock/db.json'), 'utf-8'));
+    return Array.isArray(db.users) ? (db.users as DbUser[]) : [];
+  } catch {
+    return [];
+  }
 }
+
+// Read once at module load — mock data doesn't change at runtime
+const users = loadUsers();
 
 const yoga = createYoga({
   schema: createSchema({
@@ -37,9 +45,9 @@ const yoga = createYoga({
     `,
     resolvers: {
       Query: {
-        users: () => getUsers(),
+        users: () => users,
         user: (_: unknown, { id }: { id: string }) =>
-          getUsers().find((u) => u.id === id) ?? null
+          users.find((u) => u.id === id) ?? null
       }
     }
   }),
@@ -47,5 +55,5 @@ const yoga = createYoga({
   landingPage: false
 });
 
-export const GET = ({ request }: { request: Request }) => yoga.fetch(request);
-export const POST = ({ request }: { request: Request }) => yoga.fetch(request);
+export const GET: RequestHandler = ({ request }) => yoga.fetch(request);
+export const POST: RequestHandler = ({ request }) => yoga.fetch(request);
