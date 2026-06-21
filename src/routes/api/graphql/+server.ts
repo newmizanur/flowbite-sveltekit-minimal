@@ -1,7 +1,8 @@
 import { createYoga, createSchema } from 'graphql-yoga';
 import type { RequestHandler } from './$types';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+const randomUUID = () => crypto.randomUUID();
 
 type DbUser = {
   id: string;
@@ -22,7 +23,9 @@ function loadUsers(): DbUser[] {
   }
 }
 
-// Read once at module load — mock data doesn't change at runtime
+const DB_PATH = join(process.cwd(), 'mock/db.json');
+
+// In-memory list — mutated by createUser, seeded from disk at startup
 const users = loadUsers();
 
 const yoga = createYoga({
@@ -42,12 +45,29 @@ const yoga = createYoga({
         users: [User!]!
         user(id: ID!): User
       }
+
+      type Mutation {
+        createUser(name: String!, email: String!, role: String!): User!
+      }
     `,
     resolvers: {
       Query: {
         users: () => users,
         user: (_: unknown, { id }: { id: string }) =>
           users.find((u) => u.id === id) ?? null
+      },
+      Mutation: {
+        createUser: (_: unknown, { name, email, role }: { name: string; email: string; role: string }) => {
+          const now = new Date().toISOString();
+          const user: DbUser = { id: randomUUID(), name, email, role, status: 'Active', created_at: now, updated_at: now };
+          users.push(user);
+          try {
+            const db = JSON.parse(readFileSync(DB_PATH, 'utf-8'));
+            db.users = users;
+            writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+          } catch { /* ignore write errors — in-memory list already updated */ }
+          return user;
+        }
       }
     }
   }),

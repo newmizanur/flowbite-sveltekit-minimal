@@ -1,11 +1,15 @@
 <script lang="ts">
-  import { queryStore, gql, setContextClient } from '@urql/svelte';
+  import { queryStore, mutationStore, gql, setContextClient } from '@urql/svelte';
   import { createUrqlClient } from '$lib/graphql/client';
   import {
     Badge,
     Breadcrumb,
     BreadcrumbItem,
+    Button,
     Heading,
+    Input,
+    Label,
+    Select,
     Table,
     TableBody,
     TableBodyCell,
@@ -32,6 +36,52 @@
   setContextClient(client);
 
   let selectedId = $state<string | null>(null);
+
+  // Live users list — starts from SSR data, grows when mutations succeed
+  let liveUsers = $state(data.users);
+
+  // Create form state
+  let form = $state({ name: '', email: '', role: 'Member' });
+  let createResult = $state<{ fetching: boolean; error?: string }>({ fetching: false });
+
+  const CREATE_USER = gql`
+    mutation CreateUser($name: String!, $email: String!, $role: String!) {
+      createUser(name: $name, email: $email, role: $role) {
+        id
+        name
+        email
+        role
+        status
+        created_at
+      }
+    }
+  `;
+
+  async function handleCreate(e: Event) {
+    e.preventDefault();
+    createResult = { fetching: true };
+    const result = await mutationStore({
+      client,
+      query: CREATE_USER,
+      variables: { name: form.name, email: form.email, role: form.role }
+    });
+    // mutationStore returns a readable store — subscribe once to get the result
+    await new Promise<void>((resolve) => {
+      const unsub = result.subscribe((r) => {
+        if (!r.fetching) {
+          if (r.error) {
+            createResult = { fetching: false, error: r.error.message };
+          } else if (r.data?.createUser) {
+            liveUsers = [...liveUsers, r.data.createUser];
+            form = { name: '', email: '', role: 'Member' };
+            createResult = { fetching: false };
+          }
+          unsub();
+          resolve();
+        }
+      });
+    });
+  }
 
   const userDetail = $derived(
     selectedId
@@ -81,6 +131,27 @@
       All users <span class="text-sm font-normal text-gray-400">(loaded via SSR GraphQL)</span>
     </Heading>
     <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">Click a row to fetch detail via client-side urql.</p>
+
+    <form onsubmit={handleCreate} class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+      <div class="flex-1 min-w-36">
+        <Label for="new-name" class="mb-1 text-xs dark:text-white">Name</Label>
+        <Input id="new-name" bind:value={form.name} placeholder="Jane Smith" required class="border dark:border-gray-600 dark:bg-gray-700" />
+      </div>
+      <div class="flex-1 min-w-48">
+        <Label for="new-email" class="mb-1 text-xs dark:text-white">Email</Label>
+        <Input id="new-email" type="email" bind:value={form.email} placeholder="jane@example.com" required class="border dark:border-gray-600 dark:bg-gray-700" />
+      </div>
+      <div class="w-36">
+        <Label for="new-role" class="mb-1 text-xs dark:text-white">Role</Label>
+        <Select id="new-role" bind:value={form.role} items={[{ value: 'Admin', name: 'Admin' }, { value: 'Member', name: 'Member' }, { value: 'Viewer', name: 'Viewer' }]} class="border dark:border-gray-600 dark:bg-gray-700" />
+      </div>
+      <Button type="submit" disabled={createResult.fetching} size="sm">
+        {createResult.fetching ? 'Saving…' : 'Add user'}
+      </Button>
+      {#if createResult.error}
+        <p class="w-full text-sm text-red-500">{createResult.error}</p>
+      {/if}
+    </form>
   </div>
 
   <div class="flex gap-0">
@@ -94,7 +165,7 @@
           <TableHeadCell class="p-4">Created</TableHeadCell>
         </TableHead>
         <TableBody>
-          {#each data.users as user (user.id)}
+          {#each liveUsers as user (user.id)}
             <TableBodyRow
               class="cursor-pointer text-base {selectedId === user.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}"
               onclick={() => (selectedId = selectedId === user.id ? null : user.id)}
