@@ -33,7 +33,7 @@
     {
       name: 'CRUD',
       Icon: RectangleListSolid,
-      children: { Users: '/crud/users' }
+      children: { Users: '/crud/users', 'Users (GQL)': '/crud/users-gql' }
     },
     {
       name: 'Authentication',
