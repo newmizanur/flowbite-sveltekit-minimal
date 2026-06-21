@@ -83,8 +83,11 @@
   },
   "dependencies": {
     "@flowbite-svelte-plugins/chart": "^0.2.4",
+    "@urql/svelte": "^5.0.0",
     "flowbite-svelte": "^1.13.8",
     "flowbite-svelte-icons": "^3.0.0",
+    "graphql": "^17.0.1",
+    "graphql-yoga": "^5.21.2",
     "tailwind-merge": "^3.3.1"
   },
   "keywords": [
